@@ -1,0 +1,3 @@
+Mission Objective:
+
+Build a quantum experiment platform that uses entangled particles and symbolic input patterns to detect deviations from quantum randomness that could imply non-human intelligence (NHI) interaction, structured influence, or emergent patterns beyond known physics.
