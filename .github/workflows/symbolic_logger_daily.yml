@@ -1,0 +1,26 @@
+name: Daily Symbolic Logger
+
+on:
+  schedule:
+    - cron: '0 3 * * *'  # Runs daily at 3:00 AM UTC
+  workflow_dispatch:      # Allows manual triggering
+
+jobs:
+  run-symbolic-logger:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+
+      - name: Run Symbolic Logger
+        run: |
+          python test_logger_run.py
