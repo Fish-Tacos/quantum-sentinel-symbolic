@@ -23,10 +23,11 @@ jobs:
 
       - name: Run Symbolic Logger
         run: |
+          mkdir -p logs
           python test_logger_run.py
 
       - name: Upload logs as artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: symbolic-log
           path: logs/symbolic_log.json
