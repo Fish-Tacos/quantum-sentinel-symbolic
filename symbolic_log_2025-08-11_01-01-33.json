@@ -1,0 +1,234 @@
+[
+  {
+    "symbol_type": "Test Run",
+    "symbol_value": "2025-08-03",
+    "input_params": {
+      "shots": 1024,
+      "test_mode": true
+    },
+    "result_raw": {
+      "0": 512,
+      "1": 512
+    },
+    "anomaly_detected": false,
+    "observer_notes": "Sanity check for logger functionality.",
+    "auto_symbolic_metadata": {
+      "date": "2025-08-04",
+      "day_of_year": 216,
+      "is_fibonacci_day": false,
+      "moon_phase_cycle": 0.36,
+      "symbolic_music_interval": "Perfect Fifth"
+    }
+  },
+  {
+    "timestamp": "2025-08-04T01:46:28.594050Z",
+    "symbol_type": "Test Run",
+    "symbol_value": "2025-08-03",
+    "input_params": {
+      "shots": 1024,
+      "test_mode": true
+    },
+    "result_raw": {
+      "0": 512,
+      "1": 512
+    },
+    "anomaly_detected": false,
+    "observer_notes": "Sanity check for logger functionality.",
+    "auto_symbolic_metadata": {
+      "date": "2025-08-04",
+      "day_of_year": 216,
+      "is_fibonacci_day": false,
+      "moon_phase_cycle": 0.36,
+      "symbolic_music_interval": "Perfect Fifth"
+    }
+  },
+  {
+    "timestamp": "2025-08-06T01:55:22.721886Z",
+    "symbol_type": "Test Run",
+    "symbol_value": "Eye of Ra",
+    "input_params": {
+      "shots": 1024,
+      "test_mode": true
+    },
+    "result_raw": {
+      "0": 520,
+      "1": 504
+    },
+    "anomaly_detected": false,
+    "observer_notes": "Testing symbolic tracker integration",
+    "auto_symbolic_metadata": {
+      "date": "2025-08-06",
+      "day_of_year": 218,
+      "is_fibonacci_day": false,
+      "moon_phase_cycle": 0.42,
+      "symbolic_music_interval": "Major Sixth"
+    }
+  },
+  {
+    "timestamp": "2025-08-06T02:05:25.064364Z",
+    "symbol_type": "Test Run",
+    "symbol_value": "Eye of Ra",
+    "input_params": {
+      "shots": 1024,
+      "test_mode": true
+    },
+    "result_raw": {
+      "0": 520,
+      "1": 504
+    },
+    "anomaly_detected": false,
+    "observer_notes": "Testing symbolic tracker integration",
+    "auto_symbolic_metadata": {
+      "date": "2025-08-06",
+      "day_of_year": 218,
+      "is_fibonacci_day": false,
+      "moon_phase_cycle": 0.42,
+      "symbolic_music_interval": "Major Sixth"
+    }
+  },
+  {
+    "timestamp": "2025-08-06T02:06:02.619179Z",
+    "symbol_type": "Natural Pattern",
+    "symbol_value": "Spiral",
+    "input_params": {
+      "shots": 1024,
+      "test_mode": true
+    },
+    "result_raw": {
+      "0": 523,
+      "1": 501
+    },
+    "anomaly_detected": false,
+    "observer_notes": "Occurs in galaxies and shells",
+    "auto_symbolic_metadata": {
+      "date": "2025-08-06",
+      "day_of_year": 218,
+      "is_fibonacci_day": false,
+      "moon_phase_cycle": 0.42,
+      "symbolic_music_interval": "Major Sixth"
+    }
+  },
+  {
+    "timestamp": "2025-08-06T02:06:02.634806Z",
+    "symbol_type": "Celestial Event",
+    "symbol_value": "Comet ATLAS 3I",
+    "input_params": {
+      "shots": 1024,
+      "test_mode": true
+    },
+    "result_raw": {
+      "0": 516,
+      "1": 508
+    },
+    "anomaly_detected": false,
+    "observer_notes": "Comet is near Earth; potential resonance cue",
+    "auto_symbolic_metadata": {
+      "date": "2025-08-06",
+      "day_of_year": 218,
+      "is_fibonacci_day": false,
+      "moon_phase_cycle": 0.42,
+      "symbolic_music_interval": "Major Sixth"
+    }
+  },
+  {
+    "timestamp": "2025-08-06T02:06:02.650557Z",
+    "symbol_type": "Ancient Symbol",
+    "symbol_value": "Triskelion",
+    "input_params": {
+      "shots": 1024,
+      "test_mode": true
+    },
+    "result_raw": {
+      "0": 510,
+      "1": 514
+    },
+    "anomaly_detected": false,
+    "observer_notes": "Symbol tied to motion, cycles, and resonance",
+    "auto_symbolic_metadata": {
+      "date": "2025-08-06",
+      "day_of_year": 218,
+      "is_fibonacci_day": false,
+      "moon_phase_cycle": 0.42,
+      "symbolic_music_interval": "Major Sixth"
+    }
+  },
+  {
+    "timestamp": "2025-08-10T22:57:54.226248Z",
+    "symbol_type": "Natural Pattern",
+    "symbol_value": "Spiral",
+    "input_params": {
+      "shots": 1024,
+      "test_mode": true
+    },
+    "result_raw": {
+      "0": 523,
+      "1": 501
+    },
+    "anomaly_detected": false,
+    "observer_notes": "Occurs in galaxies and shells",
+    "auto_symbolic_metadata": {
+      "date": "2025-08-10",
+      "day_of_year": 222,
+      "is_fibonacci_day": false,
+      "moon_phase_cycle": 0.56,
+      "symbolic_music_interval": "Major Third"
+    }
+  },
+  {
+    "timestamp": "2025-08-10T22:57:54.226248Z",
+    "symbol_type": "Celestial Event",
+    "symbol_value": "Comet ATLAS 3I",
+    "input_params": {
+      "shots": 1024,
+      "test_mode": true
+    },
+    "result_raw": {
+      "0": 516,
+      "1": 508
+    },
+    "anomaly_detected": false,
+    "observer_notes": "Comet is near Earth; potential resonance cue",
+    "auto_symbolic_metadata": {
+      "date": "2025-08-10",
+      "day_of_year": 222,
+      "is_fibonacci_day": false,
+      "moon_phase_cycle": 0.56,
+      "symbolic_music_interval": "Major Third"
+    }
+  },
+  {
+    "timestamp": "2025-08-10T22:57:54.241874Z",
+    "symbol_type": "Ancient Symbol",
+    "symbol_value": "Triskelion",
+    "input_params": {
+      "shots": 1024,
+      "test_mode": true
+    },
+    "result_raw": {
+      "0": 510,
+      "1": 514
+    },
+    "anomaly_detected": false,
+    "observer_notes": "Symbol tied to motion, cycles, and resonance",
+    "auto_symbolic_metadata": {
+      "date": "2025-08-10",
+      "day_of_year": 222,
+      "is_fibonacci_day": false,
+      "moon_phase_cycle": 0.56,
+      "symbolic_music_interval": "Major Third"
+    }
+  },
+  {
+    "timestamp": "2025-08-11T01:01:33.953963",
+    "user_note": "Manual CLI test",
+    "auto_symbolic_metadata": {
+      "moon_phase": "waning_gibbous",
+      "is_fibonacci_date": false,
+      "celestial_event": null,
+      "personal_resonance_symbols": [
+        "Eye of Ra",
+        "Spiral"
+      ]
+    }
+  }
+]
