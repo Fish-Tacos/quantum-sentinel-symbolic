@@ -4,10 +4,16 @@ from datetime import datetime
 import os
 import math
 
-LOG_DIR = "logs"
+# Ensure logs go to the correct folder inside /data/logs
+LOG_DIR = os.path.join("data", "logs")
+
+# Paths for the rolling log files (latest snapshot)
 CSV_PATH = os.path.join(LOG_DIR, "symbolic_log.csv")
 JSON_PATH = os.path.join(LOG_DIR, "symbolic_log.json")
+
+# Create directory if it does not exist
 os.makedirs(LOG_DIR, exist_ok=True)
+
 
 FIELDNAMES = [
     "timestamp", "symbol_type", "symbol_value",
