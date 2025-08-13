@@ -1,0 +1,7 @@
+# Logs (keep folder, ignore contents)
+data/logs/*
+!data/logs/.gitkeep
+
+# Python cache
+__pycache__/
+*.pyc
