@@ -1,36 +1,47 @@
-import os
-import json
-import shutil
-from datetime import datetime
-
-def log_symbolic_event(entry):
-    log_path = "logs/symbolic_log.json"
-    archive_dir = "logs/archive"
-    
-    # Ensure both logs/ and logs/archive/ directories exist
-    os.makedirs(os.path.dirname(log_path), exist_ok=True)
-    os.makedirs(archive_dir, exist_ok=True)
-
-    # Backup existing log before writing new data
-    if os.path.exists(log_path):
-        timestamp = datetime.utcnow().isoformat().replace(":", "-").replace(".", "-")
-        backup_filename = f"symbolic_log_{timestamp}.json"
-        backup_path = os.path.join(archive_dir, backup_filename)
-        shutil.copy2(log_path, backup_path)
-
-    # Load existing log if it exists
-    if os.path.exists(log_path):
-        with open(log_path, "r") as f:
-            try:
-                data = json.load(f)
-                if not isinstance(data, list):
-                    data = []
-            except json.JSONDecodeError:
-                data = []
-    else:
-        data = []
-
-    # Append new entry and save log
-    data.append(entry)
-    with open(log_path, "w") as f:
-        json.dump(data, f, indent=4)
+[
+  {
+    "timestamp": "2025-08-17T21:45:09.994682Z",
+    "symbol_type": "Natural Pattern",
+    "symbol_value": "Spiral",
+    "input_params": {
+      "shots": 1024,
+      "test_mode": true
+    },
+    "result_raw": {
+      "r0": 523,
+      "r1": 501
+    },
+    "anomaly_detected": false,
+    "observer_notes": "Occurs in galaxies and shells"
+  },
+  {
+    "timestamp": "2025-08-17T21:45:09.994689Z",
+    "symbol_type": "Celestial Event",
+    "symbol_value": "Comet ATLAS 3I",
+    "input_params": {
+      "shots": 1024,
+      "test_mode": true
+    },
+    "result_raw": {
+      "r0": 516,
+      "r1": 508
+    },
+    "anomaly_detected": false,
+    "observer_notes": "Comet is near Earth; potential resonance cue"
+  },
+  {
+    "timestamp": "2025-08-17T21:45:09.994691Z",
+    "symbol_type": "Ancient Symbol",
+    "symbol_value": "Triskelion",
+    "input_params": {
+      "shots": 1024,
+      "test_mode": true
+    },
+    "result_raw": {
+      "r0": 510,
+      "r1": 514
+    },
+    "anomaly_detected": false,
+    "observer_notes": "Symbol tied to motion, cycles, and resonance"
+  }
+]
