@@ -5,7 +5,7 @@
     "symbol_value": "Spiral",
     "input_params": {
       "shots": 1024,
-      "test_mode": true
+      "test_mode": True
     },
     "result_raw": {
       "r0": 523,
@@ -20,7 +20,7 @@
     "symbol_value": "Comet ATLAS 3I",
     "input_params": {
       "shots": 1024,
-      "test_mode": true
+      "test_mode": True
     },
     "result_raw": {
       "r0": 516,
@@ -35,7 +35,7 @@
     "symbol_value": "Triskelion",
     "input_params": {
       "shots": 1024,
-      "test_mode": true
+      "test_mode": True
     },
     "result_raw": {
       "r0": 510,
