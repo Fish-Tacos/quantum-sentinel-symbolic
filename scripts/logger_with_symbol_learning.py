@@ -34,4 +34,3 @@ def log_symbolic_event(entry):
     data.append(entry)
     with open(log_path, "w") as f:
         json.dump(data, f, indent=4)
-
