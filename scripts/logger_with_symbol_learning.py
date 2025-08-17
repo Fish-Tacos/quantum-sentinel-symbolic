@@ -11,7 +11,7 @@
       "r0": 523,
       "r1": 501
     },
-    "anomaly_detected": false,
+    "anomaly_detected": False,
     "observer_notes": "Occurs in galaxies and shells"
   },
   {
@@ -26,7 +26,7 @@
       "r0": 516,
       "r1": 508
     },
-    "anomaly_detected": false,
+    "anomaly_detected": False,
     "observer_notes": "Comet is near Earth; potential resonance cue"
   },
   {
@@ -41,7 +41,7 @@
       "r0": 510,
       "r1": 514
     },
-    "anomaly_detected": false,
+    "anomaly_detected": False,
     "observer_notes": "Symbol tied to motion, cycles, and resonance"
   }
 ]
