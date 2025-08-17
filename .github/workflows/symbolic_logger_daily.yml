@@ -24,7 +24,7 @@ jobs:
       - name: Run Symbolic Logger
         run: |
           mkdir -p logs
-          python test_logger_run.py
+          python test_logger_run_UPDATED.py
 
       - name: Upload logs as artifact
         uses: actions/upload-artifact@v4
