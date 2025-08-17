@@ -1,4 +1,4 @@
-from logger_with_symbol_learning_PRINTS import log_symbolic_event
+from logger_with_symbol_learning import log_symbolic_event
 from datetime import datetime
 
 # 1. Spiral Symbol
