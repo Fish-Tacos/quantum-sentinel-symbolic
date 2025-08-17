@@ -1,6 +1,5 @@
+from logger_with_symbol_learning_PRINTS import log_symbolic_event
 from datetime import datetime
-import os
-import json
 
 # 1. Spiral Symbol
 log_entry_1 = {
@@ -12,6 +11,7 @@ log_entry_1 = {
     "anomaly_detected": False,
     "observer_notes": "Occurs in galaxies and shells"
 }
+log_symbolic_event(log_entry_1)
 
 # 2. Comet ATLAS 3I
 log_entry_2 = {
@@ -23,6 +23,7 @@ log_entry_2 = {
     "anomaly_detected": False,
     "observer_notes": "Comet is near Earth; potential resonance cue"
 }
+log_symbolic_event(log_entry_2)
 
 # 3. Triskelion Symbol
 log_entry_3 = {
@@ -34,11 +35,4 @@ log_entry_3 = {
     "anomaly_detected": False,
     "observer_notes": "Symbol tied to motion, cycles, and resonance"
 }
-
-# Combine all logs
-log_entries = [log_entry_1, log_entry_2, log_entry_3]
-
-# Save to logs/symbolic_log.json
-os.makedirs("logs", exist_ok=True)
-with open("logs/symbolic_log.json", "w") as f:
-    json.dump(log_entries, f, indent=2)
+log_symbolic_event(log_entry_3)
