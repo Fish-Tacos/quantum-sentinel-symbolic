@@ -1,35 +1,117 @@
-name: Daily Symbolic Logger
+name: Symbolic Logger (Daily, ET-aware)
 
 on:
+  schedule:
+    - cron: "0 * * * *"   # hourly; we gate to ET below
   workflow_dispatch:
+    inputs:
+      run_now:
+        description: "Force a run now (bypass time gate)"
+        default: "false"
+        required: false
+        type: choice
+        options: ["false", "true"]
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: symbolic-logger
+  cancel-in-progress: false
+
+env:
+  PYTHON_VERSION: "3.11"
+  LOGGER_SCRIPT: "scripts/logger_with_symbolic_interference.py"
+  # Your script writes here:
+  LOG_JSON: "data/logs/symbolic_log.json"
+  LOG_CSV:  "data/logs/symbolic_log.csv"
+  DESIRED_LOCAL_HOUR: "14"      # 24h, America/New_York
+  DESIRED_LOCAL_MINUTE: "00"
+  LOCAL_TZ: "America/New_York"
 
 jobs:
-  run-symbolic-logger:
+  symbolic-log:
     runs-on: ubuntu-latest
-
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.11'
+      - name: Show UTC and ET times
+        run: |
+          echo "UTC now: $(date -u)"
+          sudo ln -snf /usr/share/zoneinfo/$LOCAL_TZ /etc/localtime && echo $LOCAL_TZ | sudo tee /etc/timezone
+          echo "Local ($LOCAL_TZ): $(date '+%Y-%m-%d %H:%M:%S %Z')"
 
-    - name: Install dependencies
-      run: echo "No dependencies to install"
+      - name: Gate by ET hour/minute
+        if: ${{ inputs.run_now != 'true' }}
+        id: gate
+        run: |
+          NOW_HOUR=$(date +%H)
+          NOW_MIN=$(date +%M)
+          if [ "$NOW_HOUR" != "${DESIRED_LOCAL_HOUR}" ] || [ "$NOW_MIN" != "${DESIRED_LOCAL_MINUTE}" ]; then
+            echo "Not at ${DESIRED_LOCAL_HOUR}:${DESIRED_LOCAL_MINUTE} $LOCAL_TZ; skipping run."
+            echo "proceed=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          echo "proceed=true" >> $GITHUB_OUTPUT
 
-    - name: Run Symbolic Logger
-      run: |
-        mkdir -p logs
-        python scripts/test_logger_run_UPDATED.py
+      - name: Set up Python
+        if: ${{ steps.gate.outputs.proceed != 'false' || inputs.run_now == 'true' }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
 
-    - name: Upload logs as artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: symbolic-logs
-        path: |
-          logs/symbolic_log.json
-          logs/symbolic_log_cumulative.jsonl
-          logs/symbolic_log_cumulative.csv
-          logs/archive/
+      - name: Install dependencies
+        if: ${{ steps.gate.outputs.proceed != 'false' || inputs.run_now == 'true' }}
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f "requirements.txt" ]; then pip install -r requirements.txt; fi
+
+      - name: Run logger
+        if: ${{ steps.gate.outputs.proceed != 'false' || inputs.run_now == 'true' }}
+        run: python "$LOGGER_SCRIPT"
+        env:
+          PYTHONUNBUFFERED: "1"
+
+      - name: Show tail of logs
+        if: ${{ steps.gate.outputs.proceed != 'false' || inputs.run_now == 'true' }}
+        run: |
+          if [ -f "$LOG_JSON" ]; then
+            echo "---- Tail of $LOG_JSON ----"; tail -n 50 "$LOG_JSON"; echo "---------------------------"
+          else
+            echo "WARNING: $LOG_JSON not found."
+          fi
+          if [ -f "$LOG_CSV" ]; then
+            echo "---- Tail of $LOG_CSV ----"; tail -n 20 "$LOG_CSV" || true; echo "---------------------------"
+          else
+            echo "WARNING: $LOG_CSV not found."
+          fi
+
+      - name: Commit & push changes (JSON/CSV)
+        if: ${{ steps.gate.outputs.proceed != 'false' || inputs.run_now == 'true' }}
+        run: |
+          git status --porcelain
+          # Stage just the rolling logs; snapshots can explode history
+          mkdir -p data/logs
+          git add $LOG_JSON $LOG_CSV 2>/dev/null || true
+          if [ -n "$(git status --porcelain)" ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git commit -m "chore(symbolic-log): update logs on $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+            git push
+          else
+            echo "No changes to commit."
+          fi
+
+      - name: Upload artifacts (logs folder)
+        if: ${{ steps.gate.outputs.proceed != 'false' || inputs.run_now == 'true' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: logs-${{ github.run_id }}
+          path: |
+            data/logs/symbolic_log.json
+            data/logs/symbolic_log.csv
+          if-no-files-found: warn
