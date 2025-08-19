@@ -1,0 +1,23 @@
+[
+  {
+    "timestamp": "2025-08-18T21:37:29-04:00",
+    "symbol_type": "Test",
+    "symbol_value": "Manual Run",
+    "input_params": {
+      "shots": 512
+    },
+    "result_raw": {
+      "0": 256,
+      "1": 256
+    },
+    "anomaly_detected": false,
+    "observer_notes": "Manual Step 3.4 Test",
+    "auto_symbolic_metadata": {
+      "date": "2025-08-18",
+      "day_of_year": 230,
+      "is_fibonacci_day": false,
+      "moon_phase_cycle": 0.8345,
+      "symbolic_music_interval": "Perfect Fifth"
+    }
+  }
+]
