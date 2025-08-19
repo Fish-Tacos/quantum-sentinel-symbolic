@@ -1,8 +1,9 @@
 name: Symbolic Logger (Daily, ET-aware)
 
 on:
+  # Runs every hour, then gates to the desired ET hour below
   schedule:
-    - cron: "0 * * * *"   # hourly; we gate to ET below
+    - cron: "0 * * * *"
   workflow_dispatch:
     inputs:
       run_now:
@@ -22,11 +23,10 @@ concurrency:
 
 env:
   PYTHON_VERSION: "3.11"
-  LOGGER_SCRIPT: "scripts/logger_with_symbolic_interference.py"
-  # Your script writes here:
+  LOGGER_SCRIPT: "scripts/logger_with_symbolic_inference.py"
   LOG_JSON: "data/logs/symbolic_log.json"
   LOG_CSV:  "data/logs/symbolic_log.csv"
-  DESIRED_LOCAL_HOUR: "14"      # 24h, America/New_York
+  DESIRED_LOCAL_HOUR: "14"      # 2 PM ET (24h format)
   DESIRED_LOCAL_MINUTE: "00"
   LOCAL_TZ: "America/New_York"
 
@@ -94,7 +94,7 @@ jobs:
         if: ${{ steps.gate.outputs.proceed != 'false' || inputs.run_now == 'true' }}
         run: |
           git status --porcelain
-          # Stage just the rolling logs; snapshots can explode history
+          # Stage just the rolling logs; snapshots not included to avoid history bloat
           mkdir -p data/logs
           git add $LOG_JSON $LOG_CSV 2>/dev/null || true
           if [ -n "$(git status --porcelain)" ]; then
