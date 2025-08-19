@@ -1,0 +1,464 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Quantum Sentinel — Symbolic Log</title>
+  <style>
+    :root { --bg:#0b1020; --card:#121a33; --ink:#e7ecff; --muted:#9fb0ff; --ok:#67d38c; --warn:#ffd86b; --bad:#ff7b7b; --grid:#2a355a; --accent:#7aa2ff; }
+    html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font:14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
+    header{padding:18px 22px;border-bottom:1px solid var(--grid);position:sticky;top:0;background:linear-gradient(to bottom,#0b1020 85%,rgba(11,16,32,.8));backdrop-filter:blur(4px)}
+    h1{margin:0;font-size:18px;letter-spacing:.3px}
+    .sub{color:var(--muted);font-size:12px;margin-top:4px}
+    main{padding:18px 22px 48px;display:grid;gap:16px;grid-template-columns:360px 1fr}
+    .stack{display:grid;gap:12px}
+    .card{background:var(--card);border:1px solid var(--grid);border-radius:14px;padding:14px}
+    .row{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+    .k{color:var(--muted)}
+    .v{font-weight:600}
+    button{background:var(--accent);color:#fff;border:0;border-radius:10px;padding:8px 12px;cursor:pointer;font-weight:600}
+    button.secondary{background:transparent;border:1px solid var(--grid);color:var(--ink)}
+    .toggle{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--grid);border-radius:10px;padding:6px 10px;cursor:pointer;user-select:none}
+    .toggle input{accent-color:#7aa2ff}
+    .ctrls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .ctrls input[type="date"], .ctrls select, .ctrls input[type="text"]{background:transparent;color:var(--ink);border:1px solid var(--grid);border-radius:10px;padding:6px 10px;outline:none}
+    .ctrls input[type="text"]{min-width:200px}
+    .tablewrap{overflow:auto;max-height:60vh;border-radius:10px;border:1px solid var(--grid)}
+    table{border-collapse:collapse;width:100%;min-width:900px}
+    th,td{padding:8px 10px;border-bottom:1px solid var(--grid)}
+    th{text-align:left;color:var(--muted);font-weight:600;position:sticky;top:0;background:var(--card)}
+    .chip{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;border:1px solid var(--grid)}
+    .chip.ok{background:rgba(103,211,140,.15);border-color:rgba(103,211,140,.35)}
+    .chip.warn{background:rgba(255,216,107,.15);border-color:rgba(255,216,107,.45)}
+    .chip.bad{background:rgba(255,123,123,.15);border-color:rgba(255,123,123,.35)}
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace}
+    canvas{width:100%;height:240px;display:block}
+    .grid{display:grid;gap:12px;grid-template-columns:repeat(2,1fr)}
+    .tiny{width:100%;height:64px}
+    .strip{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+    .cell{width:26px;height:26px;border-radius:6px;border:1px solid var(--grid);display:flex;align-items:center;justify-content:center;font-size:11px;color:#cfe0ff}
+    .cell.zero{outline:1px dashed rgba(255,123,123,.6)}
+    @media (max-width:1000px){main{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Quantum Sentinel — Symbolic Watchtower</h1>
+    <div class="sub">Live view of <code>data/logs/symbolic_log.json</code> from <span id="repoName" class="mono"></span></div>
+  </header>
+
+  <main>
+    <!-- Left column: controls + stats -->
+    <section class="stack">
+      <div class="card">
+        <div class="row">
+          <div>
+            <div class="k">Last fetch</div>
+            <div id="lastFetch" class="v mono">—</div>
+          </div>
+          <div class="ctrls">
+            <label class="toggle" title="Show only entries where anomaly_detected == true">
+              <input type="checkbox" id="anomalyOnly">
+              <span>Anomalies only</span>
+            </label>
+
+            <select id="sinceSelect" title="Filter by start date">
+              <option value="all">Since: All</option>
+              <option value="7">Since: 7 days</option>
+              <option value="30">Since: 30 days</option>
+              <option value="90">Since: 90 days</option>
+              <option value="custom">Since: Custom…</option>
+            </select>
+            <input type="date" id="sinceDate" disabled />
+
+            <input type="text" id="q" placeholder="Search notes, symbols, params…" />
+
+            <!-- NEW: Timezone selector -->
+            <select id="tzSelect" title="Timestamp display timezone">
+              <option value="local">Time: Local (browser)</option>
+              <option value="America/New_York">Time: America/New_York</option>
+              <option value="UTC">Time: UTC</option>
+            </select>
+
+            <button id="refreshBtn">Refresh</button>
+            <button id="downloadBtn" class="secondary">Download JSON</button>
+            <button id="exportCsvBtn" class="secondary">Export CSV</button>
+            <!-- NEW: Reset -->
+            <button id="resetBtn" class="secondary" title="Reset all filters and timezone">Reset</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card grid">
+        <div><div class="k">Total entries (view)</div><div id="totalEntries" class="v">—</div></div>
+        <div><div class="k">Last timestamp (view)</div><div id="lastTs" class="v mono">—</div></div>
+        <div><div class="k">Heartbeat (overall)</div><div id="heartbeat" class="v"><span class="chip">—</span></div></div>
+        <div><div class="k">Anomalies in view</div><div id="anomCount" class="v">—</div></div>
+        <div><div class="k">Fibonacci days (view)</div><div id="fibCount" class="v">—</div></div>
+        <div>
+          <div class="k">Legend</div>
+          <div class="v">
+            <span class="chip ok">Fresh &lt; 26h</span>
+            <span class="chip warn">26–48h</span>
+            <span class="chip bad">&gt; 48h</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="row" style="margin-bottom:8px;"><div class="v">Symbol type frequency</div></div>
+        <canvas id="barChart" width="800" height="240" aria-label="Symbol frequency bar chart"></canvas>
+      </div>
+
+      <div class="card">
+        <div class="row" style="margin-bottom:8px;"><div class="v">Anomaly trend & last 7 days</div></div>
+        <canvas id="sparkline" class="tiny" width="800" height="64" aria-label="Anomaly rate sparkline"></canvas>
+        <div id="strip" class="strip" style="margin-top:8px;"></div>
+        <div class="k" style="margin-top:6px;">Daily cells show total entries (today ⇢ 6 days back). Empty/zero days are outlined and are computed in the selected timezone.</div>
+      </div>
+    </section>
+
+    <!-- Right column: table -->
+    <section class="stack">
+      <div class="card">
+        <div class="row" style="margin-bottom:10px;">
+          <div class="v">Latest entries</div>
+          <div class="k">Parsed directly from <code>symbolic_log.json</code></div>
+        </div>
+        <div class="tablewrap">
+          <table id="logTable">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Timestamp</th>
+                <th>Symbol Type</th>
+                <th>Symbol Value</th>
+                <th>Anomaly</th>
+                <th>Notes</th>
+                <th>Fibonacci Day</th>
+                <th>Moon Phase</th>
+                <th>Music Interval</th>
+                <th>Params</th>
+                <th>Result</th>
+              </tr>
+            </thead>
+            <tbody id="logBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // --- CONFIG ---
+    const owner = "Fish-Tacos";
+    const repo = "quantum-sentinel-symbolic";
+    const branch = "main";
+    const rawUrl = `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/data/logs/symbolic_log.json`;
+    document.getElementById("repoName").textContent = `${owner}/${repo}@${branch}`;
+
+    // --- DOM utils & helpers ---
+    const el = id => document.getElementById(id);
+    const fmt = x => (typeof x === "object" ? JSON.stringify(x) : String(x ?? ""));
+    const debounce = (fn, ms=250) => { let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a),ms); }; };
+
+    function fmtAge(ms) {
+      const s = Math.max(0, Math.floor(ms/1000));
+      const d = Math.floor(s/86400), h = Math.floor((s%86400)/3600), m = Math.floor((s%3600)/60);
+      if (d) return `${d}d ${h}h ${m}m ago`;
+      if (h) return `${h}h ${m}m ago`;
+      return `${m}m ago`;
+    }
+    function heartbeatBadge(ageMs) {
+      const badge = document.createElement("span");
+      badge.className = "chip"; badge.textContent = fmtAge(ageMs);
+      const h = ageMs / 3600000;
+      if (h < 26) badge.classList.add("ok");
+      else if (h < 48) badge.classList.add("warn");
+      else badge.classList.add("bad");
+      return badge;
+    }
+
+    // --- global state ---
+    let fullData = [];
+    let anomalyOnly = false;
+    let sinceMode = "all";     // "all" | "7" | "30" | "90" | "custom"
+    let sinceDate = null;      // Date or null
+    let query = "";            // lowercased
+    let viewTZ = "local";      // "local" | "America/New_York" | "UTC"
+
+    // --- time formatting ---
+    const tsFormatter = (tz) => new Intl.DateTimeFormat(undefined, {
+      year:"numeric", month:"2-digit", day:"2-digit",
+      hour:"2-digit", minute:"2-digit", second:"2-digit",
+      hour12:false, timeZoneName:"short", ...(tz==="local" ? {} : { timeZone: tz })
+    });
+    function fmtTs(iso, tz) { try { return tsFormatter(tz).format(new Date(iso)); } catch { return String(iso); } }
+
+    // yyyy-mm-dd key in selected tz (en-CA gives YYYY-MM-DD)
+    const dayKeyInTZ = (iso, tz) => {
+      const opts = { timeZone: (tz==="local" ? undefined : tz), year:"numeric", month:"2-digit", day:"2-digit" };
+      return new Intl.DateTimeFormat("en-CA", opts).format(new Date(iso));
+    };
+
+    async function fetchJSON() {
+      const res = await fetch(rawUrl, { cache: "no-store" });
+      if (!res.ok) throw new Error("Fetch failed: " + res.status);
+      return res.json();
+    }
+
+    // --- filtering pipeline ---
+    function getSinceStart() {
+      if (sinceMode === "custom" && sinceDate) return new Date(new Date(sinceDate).setHours(0,0,0,0));
+      if (sinceMode === "7" || sinceMode === "30" || sinceMode === "90") {
+        const d = new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate() - Number(sinceMode));
+        return d;
+      }
+      return null; // "all"
+    }
+    function entryMatchesQuery(e) {
+      if (!query) return true;
+      const hay = [
+        e.symbol_type, e.symbol_value, e.observer_notes,
+        JSON.stringify(e.input_params || {}),
+        JSON.stringify(e.result_raw || {}),
+        JSON.stringify(e.auto_symbolic_metadata || {})
+      ].join(" ").toLowerCase();
+      return hay.includes(query);
+    }
+    function getViewData() {
+      const start = getSinceStart();
+      let rows = fullData.slice();
+      if (start) rows = rows.filter(r => r.timestamp && new Date(r.timestamp) >= start);
+      if (anomalyOnly) rows = rows.filter(r => r.anomaly_detected);
+      if (query) rows = rows.filter(entryMatchesQuery);
+      return rows;
+    }
+
+    // ------- Stats / Table -------
+    function renderStats(view) {
+      el("totalEntries").textContent = view.length;
+      const last = view.length ? view[view.length - 1] : null;
+      el("lastTs").textContent = last ? fmtTs(last.timestamp, viewTZ) : "—";
+
+      const fibs = view.filter(d => d?.auto_symbolic_metadata?.is_fibonacci_day).length;
+      el("fibCount").textContent = fibs;
+      const anoms = view.filter(d => d?.anomaly_detected).length;
+      el("anomCount").textContent = anoms;
+
+      // Heartbeat reflects overall recency of the entire dataset, not filtered view
+      const hb = el("heartbeat"); hb.innerHTML = "";
+      if (fullData.length && fullData[fullData.length-1]?.timestamp) {
+        const ageMs = Date.now() - new Date(fullData[fullData.length-1].timestamp).getTime();
+        hb.appendChild(heartbeatBadge(ageMs));
+      } else {
+        hb.innerHTML = '<span class="chip bad">No data</span>';
+      }
+    }
+
+    function renderTable(view) {
+      const body = el("logBody"); body.innerHTML = "";
+      view.forEach((row, i) => {
+        const tr = document.createElement("tr");
+        const am = row.auto_symbolic_metadata || {};
+        const chip = row.anomaly_detected ? `<span class="chip bad">true</span>` : `<span class="chip ok">false</span>`;
+        tr.innerHTML = `
+          <td class="mono">${i + 1}</td>
+          <td class="mono">${fmtTs(row.timestamp, viewTZ)}</td>
+          <td>${fmt(row.symbol_type)}</td>
+          <td>${fmt(row.symbol_value)}</td>
+          <td>${chip}</td>
+          <td>${fmt(row.observer_notes)}</td>
+          <td>${am.is_fibonacci_day ? "Yes" : "No"}</td>
+          <td>${typeof am.moon_phase_cycle === "number" ? am.moon_phase_cycle.toFixed(3) : "—"}</td>
+          <td>${fmt(am.symbolic_music_interval)}</td>
+          <td class="mono">${fmt(row.input_params)}</td>
+          <td class="mono">${fmt(row.result_raw)}</td>
+        `;
+        body.appendChild(tr);
+      });
+    }
+
+    // ------- Charts -------
+    function renderBarChart(view) {
+      const counts = {};
+      for (const d of view) counts[d.symbol_type || "(blank)"] = (counts[d.symbol_type || "(blank)"] || 0) + 1;
+      const labels = Object.keys(counts), values = labels.map(k => counts[k]);
+      const canvas = el("barChart"), ctx = canvas.getContext("2d"), W = canvas.width, H = canvas.height;
+      ctx.clearRect(0, 0, W, H);
+      const pad = 30, baseY = H - pad, baseX = pad;
+      ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--grid');
+      ctx.beginPath(); ctx.moveTo(baseX,10); ctx.lineTo(baseX,baseY); ctx.lineTo(W-10,baseY); ctx.stroke();
+      if (!values.length) return;
+      const maxV = Math.max(...values), barW = Math.max(8, (W - baseX - 20) / values.length - 8);
+      const barColor = getComputedStyle(document.documentElement).getPropertyValue('--accent');
+      labels.forEach((label, i) => {
+        const x = baseX + 10 + i * (barW + 8), h = maxV ? Math.round((values[i] / maxV) * (baseY - 20)) : 0, y = baseY - h;
+        ctx.fillStyle = barColor; ctx.fillRect(x, y, barW, h);
+        ctx.fillStyle = "#c9d4ff"; ctx.font = "12px system-ui, sans-serif";
+        const txt = String(label).slice(0, 12);
+        ctx.save(); ctx.translate(x + barW/2, baseY + 12); ctx.rotate(-Math.PI/12); ctx.textAlign = "center"; ctx.fillText(txt, 0, 10); ctx.restore();
+        ctx.fillStyle = "#e7ecff"; ctx.textAlign = "center"; ctx.fillText(values[i], x + barW/2, y - 4);
+      });
+    }
+
+    function renderSparkline(view, N = 10) {
+      const canvas = el("sparkline"), ctx = canvas.getContext("2d"), W = canvas.width, H = canvas.height;
+      ctx.clearRect(0, 0, W, H);
+      if (!view.length) return;
+      const rates = [];
+      for (let i = 0; i < view.length; i++) {
+        const start = Math.max(0, i - N + 1), slice = view.slice(start, i + 1);
+        const anoms = slice.filter(d => d.anomaly_detected).length;
+        rates.push(anoms / slice.length);
+      }
+      const grid = getComputedStyle(document.documentElement).getPropertyValue('--grid');
+      ctx.strokeStyle = grid; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(0, H-1); ctx.lineTo(W, H-1); ctx.stroke();
+      const maxRate = Math.max(0.2, Math.max(...rates)), stepX = Math.max(1, W / Math.max(1, rates.length - 1));
+      ctx.beginPath();
+      rates.forEach((r, i) => {
+        const x = i * stepX, y = H - r / maxRate * (H - 8) - 4;
+        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      });
+      ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--accent'); ctx.lineWidth = 2; ctx.stroke();
+      const grad = ctx.createLinearGradient(0, 0, 0, H);
+      grad.addColorStop(0, "rgba(122,162,255,0.35)"); grad.addColorStop(1, "rgba(122,162,255,0.00)");
+      ctx.lineTo(W, H-1); ctx.lineTo(0, H-1); ctx.closePath(); ctx.fillStyle = grad; ctx.fill();
+    }
+
+    // ------- 7-day activity strip (uses selected TZ for day bucketing) -------
+    function renderSevenDayStrip(view) {
+      const wrap = el("strip"); wrap.innerHTML = "";
+      const counts = {};
+      for (const row of view) if (row.timestamp) {
+        const k = dayKeyInTZ(row.timestamp, viewTZ);
+        counts[k] = (counts[k] || 0) + 1;
+      }
+      const cells = [];
+      for (let i = 0; i < 7; i++) {
+        const dt = new Date(); dt.setHours(0,0,0,0); dt.setDate(dt.getDate() - i);
+        // convert "today-i" to the selected tz date string to compare properly
+        const key = dayKeyInTZ(dt.toISOString(), viewTZ);
+        const c = counts[key] || 0;
+        cells.push({ key, c });
+      }
+      cells.forEach(({ key, c }) => {
+        const div = document.createElement("div"); div.className = "cell" + (c === 0 ? " zero" : "");
+        const cap = Math.min(c, 6), base = 20 + cap * 12;
+        div.style.background = `rgba(122,162,255,${(base/100).toFixed(2)})`;
+        div.title = `${key}: ${c} entr${c===1?"y":"ies"}`; div.textContent = c ? String(c) : "0";
+        wrap.appendChild(div);
+      });
+    }
+
+    // ------- CSV Export -------
+    function toCsvValue(v) {
+      if (v === null || v === undefined) return "";
+      const s = typeof v === "object" ? JSON.stringify(v) : String(v);
+      if (/[",\n]/.test(s)) return `"${s.replace(/"/g,'""')}"`;
+      return s;
+    }
+    function buildCsv(rows) {
+      const headers = ["timestamp","symbol_type","symbol_value","anomaly_detected","observer_notes","auto_symbolic_metadata.day_of_year","auto_symbolic_metadata.is_fibonacci_day","auto_symbolic_metadata.moon_phase_cycle","auto_symbolic_metadata.symbolic_music_interval","input_params","result_raw"];
+      const lines = [headers.join(",")];
+      for (const r of rows) {
+        const am = r.auto_symbolic_metadata || {};
+        const row = [
+          toCsvValue(r.timestamp),
+          toCsvValue(r.symbol_type),
+          toCsvValue(r.symbol_value),
+          toCsvValue(r.anomaly_detected),
+          toCsvValue(r.observer_notes),
+          toCsvValue(am.day_of_year),
+          toCsvValue(am.is_fibonacci_day),
+          toCsvValue(am.moon_phase_cycle),
+          toCsvValue(am.symbolic_music_interval),
+          toCsvValue(r.input_params),
+          toCsvValue(r.result_raw),
+        ];
+        lines.push(row.join(","));
+      }
+      return lines.join("\n");
+    }
+    function download(filename, text) {
+      const blob = new Blob([text], { type: "text/csv;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a"); a.href = url; a.download = filename;
+      document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+    }
+
+    // ------- Render all from current filters -------
+    function renderAll() {
+      const view = getViewData();
+      el("lastFetch").textContent = new Date().toLocaleString();
+      renderStats(view);
+      renderTable(view);
+      renderBarChart(view);
+      renderSparkline(view, 10);
+      renderSevenDayStrip(view);
+    }
+
+    async function load() {
+      try {
+        fullData = await fetchJSON();
+        renderAll();
+      } catch (e) {
+        el("lastFetch").textContent = "Fetch error";
+        console.error(e);
+        alert("Failed to load symbolic_log.json. See console for details.");
+      }
+    }
+
+    // --- event wiring ---
+    el("refreshBtn").addEventListener("click", load);
+    el("downloadBtn").addEventListener("click", () => window.open(rawUrl, "_blank"));
+    el("exportCsvBtn").addEventListener("click", () => {
+      const rows = getViewData();
+      const fname = [
+        anomalyOnly ? "anomaly" : "all",
+        sinceMode === "all" ? "alltime" : sinceMode === "custom" ? (sinceDate ? new Date(sinceDate).toISOString().slice(0,10) : "custom") : `${sinceMode}d`,
+        (viewTZ === "local" ? "local" : viewTZ.replace("/","-")),
+        (query ? "q" : "noq")
+      ].join("_") + ".csv";
+      download(`symbolic_log_${fname}`, buildCsv(rows));
+    });
+    el("anomalyOnly").addEventListener("change", (e) => { anomalyOnly = !!e.target.checked; renderAll(); });
+
+    // Since controls
+    const onSinceSelect = (e) => {
+      sinceMode = e.target.value;
+      const sd = el("sinceDate");
+      if (sinceMode === "custom") { sd.disabled = false; if (!sd.value) sd.valueAsDate = new Date(); }
+      else { sd.disabled = true; }
+      renderAll();
+    };
+    const onSinceDate = (e) => { if (e.target.value) sinceDate = new Date(e.target.value); else sinceDate = null; renderAll(); };
+    el("sinceSelect").addEventListener("change", onSinceSelect);
+    el("sinceDate").addEventListener("change", onSinceDate);
+
+    // Search
+    el("q").addEventListener("input", debounce((e)=>{ query = (e.target.value||"").toLowerCase().trim(); renderAll(); }, 200));
+
+    // Timezone selector
+    el("tzSelect").addEventListener("change", (e) => { viewTZ = e.target.value; renderAll(); });
+
+    // Reset button
+    el("resetBtn").addEventListener("click", () => {
+      // state defaults
+      anomalyOnly = false; sinceMode = "all"; sinceDate = null; query = ""; viewTZ = "local";
+      // UI defaults
+      el("anomalyOnly").checked = false;
+      el("sinceSelect").value = "all";
+      el("sinceDate").value = ""; el("sinceDate").disabled = true;
+      el("q").value = "";
+      el("tzSelect").value = "local";
+      renderAll();
+    });
+
+    // Optional: auto-refresh every 5 minutes
+    // setInterval(load, 5 * 60 * 1000);
+
+    load();
+  </script>
+</body>
+</html>
