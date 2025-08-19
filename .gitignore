@@ -1,6 +1,8 @@
-# Logs (keep folder, ignore contents)
+# Logs (keep folder, ignore contents but allow JSON/CSV)
 data/logs/*
 !data/logs/.gitkeep
+!data/logs/symbolic_log.json
+!data/logs/symbolic_log.csv
 
 # Python cache
 __pycache__/
