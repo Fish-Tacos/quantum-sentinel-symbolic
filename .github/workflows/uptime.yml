@@ -1,0 +1,26 @@
+name: uptime
+on:
+  schedule:
+    - cron: "20 18 * * *"   # ~14:20 ET during DST; any daily time is fine
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  calc:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - name: Install deps
+        run: pip install requests
+      - name: Compute uptime
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          WINDOW_DAYS: "30"
+        run: python scripts/compute_uptime.py
+      - name: Commit uptime JSON
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore(status): update uptime JSON"
+          file_pattern: status/uptime.json status/uptime_shield.json
