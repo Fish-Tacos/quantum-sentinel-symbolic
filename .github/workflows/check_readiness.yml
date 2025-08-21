@@ -1,0 +1,25 @@
+name: check_readiness
+
+on:
+  workflow_dispatch: {}
+  # optional nightly run:
+  # schedule:
+  #   - cron: "15 9 * * *"  # 09:15 UTC daily
+
+permissions:
+  contents: read
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - name: Install deps
+        run: pip install requests
+      - name: Run readiness check
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          UPTIME_MIN: "90"
+        run: python scripts/check_readiness.py
