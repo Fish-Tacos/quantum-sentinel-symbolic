@@ -1,0 +1,48 @@
+name: ingest_event
+on:
+  workflow_dispatch:
+    inputs:
+      symbol:
+        description: "Symbol label"
+        required: true
+        type: string
+      resonance:
+        description: "Resonance felt?"
+        required: true
+        type: choice
+        options: ["false","true"]
+        default: "false"
+      hr:
+        description: "Heart rate (optional)"
+        required: false
+        type: string
+      hrv:
+        description: "HRV (optional)"
+        required: false
+        type: string
+      notes:
+        description: "Notes (optional)"
+        required: false
+        type: string
+permissions:
+  contents: write
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - name: Ingest event
+        run: |
+          python scripts/ingest_cli.py \
+            --symbol "${{ inputs.symbol }}" \
+            --resonance "${{ inputs.resonance }}" \
+            ${ { inputs.hr } && echo --hr "${{ inputs.hr }}" || true } \
+            ${ { inputs.hrv } && echo --hrv "${{ inputs.hrv }}" || true } \
+            --notes "${{ inputs.notes }}"
+      - name: Commit updated log
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore(ingest): add event via workflow_dispatch"
+          file_pattern: data/logs/symbolic_log.json
