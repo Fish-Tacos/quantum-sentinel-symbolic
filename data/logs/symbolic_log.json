@@ -19,5 +19,16 @@
       "moon_phase_cycle": 0.8345,
       "symbolic_music_interval": "Perfect Fifth"
     }
+  },
+  {
+    "ts": "2025-08-21T01:24:51Z",
+    "schema_version": "1.2",
+    "symbol": "Eye of Ra",
+    "resonance": true,
+    "hr": 72,
+    "hrv": 45,
+    "notes": "first manual test",
+    "source": "cli",
+    "anomaly": null
   }
 ]
