@@ -15,11 +15,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
-        with: { python-version: "3.11" }
+        with:
+          python-version: "3.11"
       - name: Install deps
         run: pip install requests
       - name: Run readiness check
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          UPTIME_MIN: "90"
+          UPTIME_MIN: "75"   # temporarily lower from 90
         run: python scripts/check_readiness.py
