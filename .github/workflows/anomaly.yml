@@ -1,0 +1,25 @@
+name: anomalies
+on:
+  # run shortly after the daily logger (14:00 ET ≈ 18:00 UTC)
+  schedule:
+    - cron: "10 18 * * *"
+  workflow_dispatch:
+  push:
+    paths:
+      - "data/logs/symbolic_log.json"
+permissions:
+  contents: write
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - name: Detect anomalies
+        run: python scripts/detect_anomalies.py || true
+      - name: Commit anomalies.json
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore(anomalies): update docs/anomalies.json"
+          file_pattern: docs/anomalies.json
