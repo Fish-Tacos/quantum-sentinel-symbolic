@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 import os, sys, json, pathlib, datetime as dt, requests
-
 REPO = "Fish-Tacos/quantum-sentinel-symbolic"
 OWNER, NAME = REPO.split("/")
 TOKEN = os.getenv("GITHUB_TOKEN")
-HEAD = {"Authorization": f"Bearer {TOKEN}", "X-GitHub-Api-Version": "2022-11-28"}
+HEAD = {"Authorization": f"Bearer {TOKEN}", "X-GitHub-Api-Version":"2022-11-28"}
 FAILS = []
 
 def check_wf(file):
@@ -20,33 +19,37 @@ def check_wf(file):
     except Exception as e:
         FAILS.append(f"workflow {file} error: {e}")
 
-# 1) CI workflows must have a recent green run
-for wf in ["symbolic_logger_daily.yml", "uptime.yml", "anomaly.yml"]:
+# 1) workflows green
+for wf in ["symbolic_logger_daily.yml","uptime.yml","anomaly.yml"]:
     check_wf(wf)
 
-# 2) uptime present and above threshold
+# 2) uptime threshold
 try:
     st = json.load(open("status/uptime.json"))
-    if float(st.get("uptime_pct", 0)) < float(os.getenv("UPTIME_MIN", "90")):
+    if float(st.get("uptime_pct",0)) < float(os.getenv("UPTIME_MIN","90")):
         FAILS.append(f"uptime below threshold: {st.get('uptime_pct')}")
 except Exception as e:
     FAILS.append(f"status/uptime.json missing or invalid: {e}")
 
-# 3) log freshness (<=24h)
+# 3) log freshness (tolerate entries missing 'ts')
 try:
-    data = json.load(open("data/logs/symbolic_log.json"))
-    last_ts = max(x["ts"] for x in data)
+    raw = json.load(open("data/logs/symbolic_log.json"))
+    entries = raw.get("entries", []) if isinstance(raw, dict) else raw
+    ts_values = [e["ts"] for e in entries if isinstance(e, dict) and "ts" in e]
+    if not ts_values:
+        raise ValueError("no entries with 'ts'")
+    last_ts = max(ts_values)
     t = dt.datetime.strptime(last_ts, "%Y-%m-%dT%H:%M:%SZ")
-    if (dt.datetime.utcnow() - t).total_seconds() > 24*3600:
+    if (dt.datetime.utcnow()-t).total_seconds() > 24*3600:
         FAILS.append("data/logs/symbolic_log.json not updated in last 24h")
 except Exception as e:
     FAILS.append(f"data/logs/symbolic_log.json issue: {e}")
 
-# 4) anomalies output exists (published to Pages)
+# 4) anomalies present
 if not pathlib.Path("docs/anomalies.json").exists():
     FAILS.append("docs/anomalies.json missing")
 
-# 5) prereg file present
+# 5) prereg present
 if not pathlib.Path("preregister/2025-08-pilot-01.md").exists():
     FAILS.append("preregister/2025-08-pilot-01.md missing")
 
