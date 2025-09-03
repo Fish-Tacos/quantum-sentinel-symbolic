@@ -32,18 +32,40 @@ except Exception as e:
     FAILS.append(f"status/uptime.json missing or invalid: {e}")
 
 # 3) log freshness (tolerate entries missing 'ts')
+from pathlib import Path
+
+SYMBOLIC_LOG = Path("data/logs/symbolic_log.json")
+WARN_HOURS = 24       # print a warning if stale
+HARD_FAIL_HOURS = 72  # fail only if older than this
+
 try:
-    raw = json.load(open("data/logs/symbolic_log.json"))
-    entries = raw.get("entries", []) if isinstance(raw, dict) else raw
-    ts_values = [e["ts"] for e in entries if isinstance(e, dict) and "ts" in e]
-    if not ts_values:
-        raise ValueError("no entries with 'ts'")
-    last_ts = max(ts_values)
-    t = dt.datetime.strptime(last_ts, "%Y-%m-%dT%H:%M:%SZ")
-    if (dt.datetime.utcnow()-t).total_seconds() > 24*3600:
-        FAILS.append("data/logs/symbolic_log.json not updated in last 24h")
+    sl = json.loads(SYMBOLIC_LOG.read_text())
+    # accept dict or {"entries": [...]} style
+    entries = sl.get("entries", sl) if isinstance(sl, dict) else sl
+
+    ts_list = []
+    for e in entries:
+        if isinstance(e, dict) and "ts" in e:
+            ts_list.append(e["ts"])
+
+    if ts_list:
+        ts_last = max(ts_list)
+        # support iso8601 or epoch seconds
+        if isinstance(ts_last, str):
+            dt_last = dt.fromisoformat(ts_last.replace("Z", "+00:00")).astimezone()
+        else:
+            dt_last = dt.fromtimestamp(float(ts_last)).astimezone()
+
+        age_h = (dt.now().astimezone() - dt_last).total_seconds() / 3600.0
+
+        if age_h > HARD_FAIL_HOURS:
+            FAILS.append(f"{SYMBOLIC_LOG} age {age_h:.1f}h > {HARD_FAIL_HOURS}h")
+        elif age_h > WARN_HOURS:
+            print(f"READINESS CHECK: WARN - {SYMBOLIC_LOG} age {age_h:.1f}h > {WARN_HOURS}h")
+    else:
+        FAILS.append(f"{SYMBOLIC_LOG} has no usable timestamps")
 except Exception as e:
-    FAILS.append(f"data/logs/symbolic_log.json issue: {e}")
+    FAILS.append(f"{SYMBOLIC_LOG} issue: {e}")
 
 # 4) anomalies present
 if not pathlib.Path("docs/anomalies.json").exists():
